@@ -30,9 +30,24 @@ SOFTWARE.
 
 println("Starting tests.");
 
-const a = Structure.new();
-const t1 = Type.OBJECT;
-println(Type.of(t1) === t1);
-println(t1);
+const a = function(v, oldVal, newVal)
+{
+    println("Old Value: " + oldVal + ", New Value: " + newVal);
+};
+
+let b = 5;
+
+const c = function()
+{
+    return b;
+};
+
+const d = ReadOnlyProperty.new(c);
+d.addListener(a);
+
+println(d.get());
+
+println(d.removeListener(a));
+println(d.removeListener(a));
 
 println("Ending tests.");
