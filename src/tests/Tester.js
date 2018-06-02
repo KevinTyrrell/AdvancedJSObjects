@@ -30,24 +30,25 @@ SOFTWARE.
 
 println("Starting tests.");
 
+let x = null, y = null;
 const a = function(v, oldVal, newVal)
 {
-    println("Old Value: " + oldVal + ", New Value: " + newVal);
+    x = oldVal;
+    y = newVal;
 };
 
-let b = 5;
+const c = Property.new(5);
+c.addListener(a);
 
-const c = function()
-{
-    return b;
-};
+const d = Property.new(10);
 
-const d = ReadOnlyProperty.new(c);
-d.addListener(a);
-
-println(d.get());
-
-println(d.removeListener(a));
-println(d.removeListener(a));
+assert(c.get() === 5);
+assert(d.get() === 10);
+c.set(3);
+assert(x === 5 && y === 3);
+d.bind(c);
+assert(d.get() === c.get());
+c.set(15);
+assert(d.get() === 15);
 
 println("Ending tests.");

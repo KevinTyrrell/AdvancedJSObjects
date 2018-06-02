@@ -79,11 +79,12 @@ const Structure = (function()
              * The protected table returned has the following members:
              * -> this: A reference to the object instance.
              * -> super: A reference to the super classes' protected member(s).
-             * @returns {{this, super: *}} Protected member(s).
+             * @param args Arguments which are passed to the super constructor.
+             * @returns {{this: {}|this, super: *}} Instance's protected member(s).
              */
-            new: function()
+            new: function(...args)
             {
-                const superProt = superConstructor();
+                const superProt = superConstructor(...args);
                 const instance = superProt.this;
                 const prot = {
                     this: instance,
@@ -171,10 +172,11 @@ const Structure = (function()
      */
     module.extend = function(module)
     {
-        return protectedStatic.extend(module, function()
-        {
-            return protectedStatic.new();
-        });
+        return protectedStatic.extend(module, construct);
+        // return protectedStatic.extend(module, function()
+        // {
+        //     return protectedStatic.new();
+        // });
     };
 
     return Object.freeze(module);
