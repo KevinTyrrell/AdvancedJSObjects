@@ -30,25 +30,9 @@ SOFTWARE.
 
 println("Starting tests.");
 
-let x = null, y = null;
-const a = function(v, oldVal, newVal)
-{
-    x = oldVal;
-    y = newVal;
-};
-
-const c = Property.new(5);
-c.addListener(a);
-
-const d = Property.new(10);
-
-assert(c.get() === 5);
-assert(d.get() === 10);
-c.set(3);
-assert(x === 5 && y === 3);
-d.bind(c);
-assert(d.get() === c.get());
-c.set(15);
-assert(d.get() === 15);
+const a = Structure.new();
+println(a);
+const b = Structure.new();
+println(b);
 
 println("Ending tests.");
