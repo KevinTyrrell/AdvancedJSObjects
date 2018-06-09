@@ -194,11 +194,15 @@ const Structure = (function()
     /**
      * @see: extend
      * @param module Submodule to extend functionality to.
-     * @returns {{}} Protected static member(s).
+     * @returns {{}} Private static member(s).
      */
     module.extend = function(module)
     {
-        return protectedStatic.extend(module, protectedStatic);
+        assert(Boolean(module));
+        assert(typeof module === "object");
+        assert(!Object.isFrozen(module));
+        assert(!Object.isSealed(module));
+        return privateStatic.extend(module, protectedStatic);
     };
 
     return Object.freeze(module);

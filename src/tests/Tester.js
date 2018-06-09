@@ -30,9 +30,8 @@ SOFTWARE.
 
 println("Starting tests.");
 
-const a = Structure.new();
+const a = Type.BOOLEAN;
+println(a.toString());
 println(a);
-const b = Structure.new();
-println(b);
 
 println("Ending tests.");

@@ -37,8 +37,10 @@ const Type = (function()
 {
     /* Module design pattern. */
     const module = { };
-    /* Protected static member(s). */
-    const protectedStatic = Enum.extend(module);
+
+    /* Private and protected static member(s). */
+    const privateStatic = Enum.extend(module);
+    const protectedStatic = privateStatic.protected;
 
     /* Private constructor. */
     const construct = function(name)
@@ -56,6 +58,9 @@ const Type = (function()
         {
             return name;
         };
+
+        /* Override toString. */
+        instance.toString = instance.getName;
 
         return Object.freeze(instance);
     };

@@ -37,8 +37,10 @@ const Enum = (function()
 {
     /* Module design pattern. */
     const module = { };
-    /* Protected static member(s). */
-    const protectedStatic = Structure.extend(module);
+
+    /* Private and protected static member(s). */
+    const privateStatic = Structure.extend(module);
+    const protectedStatic = privateStatic.protected;
 
     /**
      * @see Structure.extend
@@ -77,8 +79,9 @@ const Enum = (function()
             return values.length;
         };
 
-        /* Protected constructor. */
-        const construct = function()
+        // TODO
+        const clone = Object.assign({ }, protectedStatic);
+        clone.new = function()
         {
             const prot = protectedStatic.new();
             const instance = prot.this;
@@ -97,7 +100,7 @@ const Enum = (function()
             return Object.freeze(prot);
         };
 
-        return protectedStatic.extend(module, construct);
+        return privateStatic.extend(module, Object.freeze(clone));
     };
 
     return Object.freeze(module);
