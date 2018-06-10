@@ -79,7 +79,10 @@ const Enum = (function()
             return values.length;
         };
 
-        // TODO
+        /* Due to the limitation of the protected static system,
+         * only one protected constructor can exist for a class
+         * and it cannot be dynamically created. This is a work
+         * -around for that issue only to implement Enum functionality.*/
         const clone = Object.assign({ }, protectedStatic);
         clone.new = function()
         {

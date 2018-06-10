@@ -31,6 +31,7 @@ SOFTWARE.
 println("Starting tests.");
 
 const a = Type.BOOLEAN;
+println(Type.of(true));
 println(a.toString());
 println(a);
 
