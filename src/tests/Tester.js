@@ -30,9 +30,13 @@ SOFTWARE.
 
 println("Starting tests.");
 
-const a = Type.BOOLEAN;
-println(Type.of(true));
+let x = 5;
+const a = ReadOnlyProperty.new(function()
+{
+    return x;
+});
+
+println(a.get());
 println(a.toString());
-println(a);
 
 println("Ending tests.");

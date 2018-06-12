@@ -45,7 +45,7 @@ const Enum = (function()
     /**
      * @see Structure.extend
      * @param module Base submodule.
-     * @returns {{}} Protected static member(s).
+     * @returns {{}} Private static member(s).
      */
     module.extend = function(module)
     {

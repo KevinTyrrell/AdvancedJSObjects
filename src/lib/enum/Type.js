@@ -59,7 +59,11 @@ const Type = (function()
             return name;
         };
 
-        /* Override toString. */
+        /**
+         * Override toString.
+         * @see Structure.toString
+         * @type {string} String representation of the Type.
+         */
         instance.toString = instance.getName;
 
         return Object.freeze(instance);

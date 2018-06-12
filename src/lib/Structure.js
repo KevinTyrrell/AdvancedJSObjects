@@ -154,13 +154,13 @@ const Structure = (function()
     })));
 
     /* Protected static member(s). */
-    const protectedStatic = (function()
+    const protectedStatic = privateStatic.protected;
+    protectedStatic.super = undefined;
+    protectedStatic.new = (function()
     {
-        const t = privateStatic.protected;
-        t.super = undefined;
+        const c = protectedStatic.new;
 
-        const c = t.new;
-        t.new = function()
+        return function()
         {
             const prot = c();
             prot.super = undefined;
@@ -178,9 +178,8 @@ const Structure = (function()
 
             return Object.freeze(prot);
         };
-
-        return Object.freeze(t);
     })();
+    Object.freeze(protectedStatic);
 
     /**
      * Public constructor.
