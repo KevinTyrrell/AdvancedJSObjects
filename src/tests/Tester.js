@@ -35,8 +35,8 @@ const listener = function(_, oldVal, newVal)
     println("Property changed from " + oldVal + " to " + newVal);
 };
 
-const a = Property.new(5);
-const b = Property.new(10);
+const a = ReadOnlyPropertyWrapper.new(5);
+const b = ReadOnlyPropertyWrapper.new(10);
 
 a.addListener(listener);
 b.addListener(listener);
@@ -48,5 +48,21 @@ a.set(20);
 
 a.unbind();
 b.unbind();
+
+const c = ReadOnlyPropertyWrapper.new(25);
+const d = c.readOnly();
+
+assert(!ReadOnlyPropertyWrapper.hasInstance(d));
+assert(ReadOnlyProperty.hasInstance(d));
+assert(d.set === undefined);
+
+assert(c.get() === d.get());
+c.set(30);
+assert(d.get() === 30);
+
+d.addListener(listener);
+c.set(0);
+
+c.unbind();
 
 println("==== Ending tests ====");

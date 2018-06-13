@@ -144,6 +144,7 @@ const Property = (function()
             return Object.freeze(prot);
         };
     })();
+    Object.freeze(protectedStatic);
 
     /**
      * Public constructor.
