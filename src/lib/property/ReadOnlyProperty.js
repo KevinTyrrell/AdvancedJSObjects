@@ -154,7 +154,7 @@ const ReadOnlyProperty = (function()
         assert(!Object.isFrozen(module));
         assert(!Object.isSealed(module));
 
-        return protectedStatic.extend(module, protectedStatic);
+        return privateStatic.extend(module, protectedStatic);
     };
 
     return Object.freeze(module);

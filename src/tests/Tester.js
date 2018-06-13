@@ -28,15 +28,25 @@ SOFTWARE.
 
 "use strict";
 
-println("Starting tests.");
+println("==== Starting tests ====");
 
-let x = 5;
-const a = ReadOnlyProperty.new(function()
+const listener = function(_, oldVal, newVal)
 {
-    return x;
-});
+    println("Property changed from " + oldVal + " to " + newVal);
+};
 
-println(a.get());
-println(a.toString());
+const a = Property.new(5);
+const b = Property.new(10);
 
-println("Ending tests.");
+a.addListener(listener);
+b.addListener(listener);
+
+a.set(3);
+b.bind(a);
+
+a.set(20);
+
+a.unbind();
+b.unbind();
+
+println("==== Ending tests ====");
