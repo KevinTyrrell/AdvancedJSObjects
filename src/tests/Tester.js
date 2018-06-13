@@ -41,28 +41,26 @@ const b = NumberProperty.new(10);
 a.addListener(listener);
 b.addListener(listener);
 
-a.set(3);
-b.bind(a);
+const c = Binding.new(function()
+{
+    return a.get() + b.get();
+}, a, b);
+c.addListener(listener);
 
-a.add(15);
+println(c.get());
+a.increment();
+
+const d = Binding.new(function()
+{
+    return c.get() > 35;
+}, c);
+d.addListener(listener);
+a.add(50);
+b.subtract(100);
 
 a.unbind();
 b.unbind();
-
-const c = NumberProperty.new(25);
-const d = c.readOnly();
-
-assert(!NumberProperty.hasInstance(d));
-assert(ReadOnlyProperty.hasInstance(d));
-assert(d.set === undefined);
-
-assert(c.get() === d.get());
-c.set(30);
-assert(d.get() === 30);
-
-d.addListener(listener);
-c.increment();
-
 c.unbind();
+d.unbind();
 
 println("==== Ending tests ====");
