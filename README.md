@@ -2,59 +2,67 @@
 
 Object-Oriented Programming (OOP) JavaScript library for complex objects.
 
-TODO: https://stackoverflow.com/questions/2822089/how-to-link-to-part-of-the-same-document-in-markdown
+rTODO: https://stackoverflow.com/questions/2822089/how-to-link-to-part-of-the-same-document-in-markdown
+
+# Table of Contents
+| Access Modifiers                          | Non Access Modifiers       | Concepts                                            |
+|:-----------------------------------------:|:--------------------------:|:---------------------------------------------------:|
+| [Public](#public-members)                 | [Const](#constant-members) | [Constructors](#constructors)                       |
+| [Private](#private-members)               | [Extends](#subclassing)    | [Complex Data Types](#enforcing-complex-data-types) |
+| [Protected](#protected-members)           | [Final](#final)            | [Overriding](#overriding)                           |
+| [Public static](#private-static-members)  | [Abstract](#abstract)      | [Overloading](#overloading)                         |
+| [Private static](#private-static-members) |                            | [Inner Classes](#inner-classes)                     |
+| [Protected static](#protected-static)     |                            |                                                     ||
+
 
 # How It Works
 
----
+The goal is to implement **class-based** objects, **subtyping**, **encapsulation**, **polymorphism**, **nested classes** and **dynamic dispatch** in JavaScript. Below, I have a simple UML diagram that we're going to try to model with plain JS.
 
-The goal is to implement **class-based** objects, **subtyping**, **encapsulation**, **polymorphism**, and **dynamic dispatch** in JavaScript
-.
-The entire proto-typing system, including *objects as functions* (using the `this` and `new` keyword) won't be of any use to us to implement a `class`-based system.
-That leaves object literals.
+<center>![UML](https://i.imgur.com/pevWmFp.png)</center>
+
+Though the prototyping system has its uses, it is in direct contrast to a class-based system. Due to this, the entire prototyping system won't be of any use. This includes the `new`, `public`, `private`, `protected`, `this`, `super` etc in which objects are implemented as *functions*.
+Instead, we will base our entire system on *Object literals*. Here is our first 'Machine object':
 
 ```javascript
-let myMachine = { };
+const myMachine = { };
 ```
 
 ## Public Members
 
-Public object member(s) are 'already implemented' by JavaScript, since anyone with access to `myMachine` has access to all of the member(s) inside.
+By default, any member inside of an object literal is effectively `public`. Access to `myMachine` means having access to all `public` members inside.
 
 ```javascript
 myMachine.modelNumber = 34129;
-myMachine.state = true;
 myMachine.start = function()
 {
-    myMachine.state = true;
-    console.log("Machine " + myMachine.modelNumber + " is now starting up.");
+    console.log("Machine " + myMachine.modelNumber + " is starting up.");
 };
 ```
 
-## Constant / Final Members
+## Constant Members
 
-<center>![Frozen](https://i.imgur.com/FCtsLqi.png)</center>
-<center>*Object.freeze() characterized.*</center>
-
-Notice that all member(s) of `myMachine` are mutable. JavaScript doesn't provide a way to declare `const` keys of an object.
-`Object.freeze()` would work, however it would cause ALL members to become `const` (and would also prevent new members from being defined). 
-To circumvent this limitation, *closures* must be utilized.
+Notice that all members of `myMachine` are mutable. That's certainly a problem, after all you wouldn't want methods like `start` to be accidentally removed from `myMachine`. There's no support for defining certain keys in an object as `const`. The API function `Object.freeze()` prevents keys of an object from being added, removed, or mutated. Once frozen, an object can never be unfrozen.
 
 ```javascript
-myMachine.modelNumber = (function()
+myMachine = Object.freeze({ });
+myMachine.start = ... // 'myMachine' cannot be modified.
+```
+
+**Concrete** is a word often used to describe objects. Think about it like pouring actual concrete. While pouring the concrete, you can mutate what you are building, but once the concrete sets (in this case, freezes), the member(s) that are defined are guaranteed to remain there; which is exactly what we want.
+
+```javascript
+const myMachine = (function()
 {
-    const modelNo = 34129;
+    const obj = { };
     
-    return function()
+    const modelNo = 34129;
+    obj.modelNumber = function()
     {
         return modelNo;
     };
-});
-
-(function()
-{
-    let state = false;
     
+    let state = false;
     myMachine.setState = function(newState)
     {
         state = newState;
@@ -64,13 +72,18 @@ myMachine.modelNumber = (function()
     {
         return state;
     };
+    
+    return Object.freeze(obj);
 })();
 ```
 
-Both data elements have been abstracted behind closures and can only be interacted with accessors and mutators.
-You may think `modelNo` and `state` are now `private`, but that is not completely true which I will cover later on.
+Both data elements have been abstracted away behind closures and can only be interacted with accessors and mutators. This combined with freezing the object allows us to have mutable and immutable members and ensure the object is concrete.
 
-Once we are done adding elements to the object, we can lock it with `Object.freeze()`, truly making `modelNo` `const` while leaving `state` mutable.
+<center>![Frozen](https://i.imgur.com/FCtsLqi.png)</center>
+<center>*Object.freeze() in action.*</center>
+
+
+Once we are done adding elements to the object, we can lock it with `Object.freeze()`, truly making `modelNo` `const` while leaving `state` mutable. You may think `modelNo` and `state` are `private` members, but that is not completely true. I will cover why later on.
 
 ## Constructors
 
@@ -86,21 +99,10 @@ const Machine = (function()
         const machine = { };
         
         const modelNo = 34129;
-        let state = false;
         
         machine.modelNumber = function()
         {
             return modelNo;
-        };
-        
-        machine.setState = function(newState)
-        {
-            state = newState;
-        };
-        
-        machine.getState = function()
-        {
-            return state;
         };
         
         return Object.freeze(machine);
@@ -133,32 +135,37 @@ A mother is known to always be able to recognize her children. Let's use that th
 When `myMachine` is created, a pointer to it is stored in a `Set` which is hidden inside the `Machine` module. Any part of the program can then ask `Machine` if `myMachine` was created by that module.
 
 ```javascript
-const machines = new Set();
-
-const createMachine = function()
+const Machine = (function()
 {
-    const machine = { };
-    machines.add(machine);
-    return machine;
-};
+    const module = { };
+    const machines = new Set();
+    
+    module.createMachine = function()
+    {
+        const machine = { };
+        ...
+        machines.add(machine);
+        return Object.freeze(machine);
+    };
+    
+    module.isMachine = function(obj)
+    {
+        return machines.has(obj);
+    };
+    
+    return Object.freeze(module);
+})();
 
-const isMachine = function(obj)
-{
-    return machines.has(obj);
-};
-
-const machine = createMachine();
+const machine = Machine.createMachine();
 const clone = Object.assign({ }, machine);
 
-console.log(isMachine(machine)); // true
-console.log(isMachine(clone)); // false
+console.log(Machine.isMachine(machine));    // true
+console.log(Machine.isMachine(clone));      // false
 ```
 
-Now, thanks to the `Machine` module, we can clearly distinct ANY JavaScript object as either a machine, or not.
-This enables type enforcement of objects. Previously only having the primitive `typeof` stdlib function, we can now
-check if objects are `undefined`, `null`, are `typeof === "object"` and finally check if they are a `Machine` with certainty.
+With this approach, we can use `typeof` and the modules to enforce complex data types.
 
-*Note: Since a `Set` or `{ }` would maintain a **hard link** to all `Machine` objects, a `WeakSet` should be used.*
+*Note: A `Set` or Object literal would maintain a **hard link** to all `Machine` objects, preventing objects from being deconstructed. A `WeakSet` should be used instead.*
 
 ## Private Static Members
 
@@ -169,33 +176,54 @@ Inside the `Machine` module, we've actually already defined `public static` and 
 const Machine = (function()
 {
     const module = { };
-    
-    ...
+    const machines = new WeakSet();
+    module.isMachine = function(obj)
+    {
+        return machines.has(obj);
+    };
     
     let nextModel = 23444; // private static
     
     module.createMachine = function()
     {
         const machine = { };
+        machines.add(machine);
         
         const modelNo = nextModel++;
+        machine.modelNumber = function()
+        {
+            return modelNo;
+        };
         
-        ...
+        return Object.freeze(machine);
     };
-    
-    ...
     
     return Object.freeze(module);
 })();
 ```
 
-`nextModel` here is a `private static` member of `Machine`, as it cannot be accessed outside of this scope.
-Now `Machine` objects relate back to the class, as they each are stamped with their model number from the constructor of `Machine`.
+`nextModel` here is a `private static` member of `Machine`, as it cannot be accessed outside of `Machine`.
 
 ## Private Members
 
-It may be tempting to think of `modelNo` as `private`, as it cannot be accessed outside of this class (*module*). `modelNo` is actually `local`, like the Lua keyword, not `private`.
-This is because `private` members should be accessible from other instances of the same class. `machineA` should be able to access all `private` members in `machineB`. Here's what I mean:
+It may be tempting to think of `modelNo` as a `private` member of `Machine` objects. After all, it cannot be accessed outside of the class (*module*). However it's actually a *local* variable and is missing a key component of true `private` members.
+Recall that while inside of a class, objects of that class should have access to all `public`, `private`, and `protected` members of another object of that same class. Here's some Java code to explain what I mean.
+
+```java
+public class Machine
+{
+    private int modelNo;
+    ...
+    
+    public void greet(Machine other)
+    {
+        System.out.println("I am Machine#" + modelNo
+            + ", it is nice to meet you Machine#" + other.modelNo);
+    }
+}
+```
+
+But here's what that looks like in our `Machine` class.
 
 ```javascript
 module.createMachine = function()
@@ -204,19 +232,19 @@ module.createMachine = function()
     
     const modelNo = ...;
     
-    machine.greet = function(otherMachine)
+    machine.greet = function(other)
     {
-        if (!isMachine(otherMachine)) return;
+        if (!isMachine(other)) return;
         
-        console.log("Greetings. I am Machine#" + modelNo 
-            + ". It is nice to meet you, Machine#" + otherMachine.modelNo); // undefined
+        console.log("I am Machine#" + modelNo
+            + ", it is nice to meet you, Machine#" + other.modelNo); // undefined
     };
 };
 ```
 
 If you define a variable inside of a closure like this, it's local within that closure; unable to be shared across the class.
 
-Somehow, we need to allow each object to 'lookup' the `private` member(s) of another object of the same class. A `Machine` is allowed to look at the `private` members of another `Machine`, but not an `Apple`.
+Somehow, we need to allow `Machine` objects inside the class to have visibility of `private` members of other `Machine` objects.
 
 ```javascript
 const privateLookup = new Map();
@@ -268,8 +296,8 @@ const Machine = (function()
             if (!module.isMachine(other)) return;
             // Access private members of the other Machine.
             const otherPriv = privMap.get(other);
-            console.log("Greetings. I am Machine#" + priv.modelNo 
-                + ". It is nice to meet you, Machine#" + otherPriv.modelNo);
+            console.log("I am Machine#" + modelNo
+                + ", it is nice to meet you, Machine#" + other.modelNo);
         };
         
         return Object.freeze(instance);
@@ -279,11 +307,11 @@ const Machine = (function()
 })();
 ```
 
-*Note: One downside with this approach is we end up breaking an unwritten rule with classes. In our example, an object of a class can have a `public` and `private` member of the same name. Most OOP languages do not allow this.*
+*Note: Due to us having a container for each access modifier, we end up allowing multiple members of the same identifier. An object can have three members named `x`, one `public`, `private`, and `protected` respectively. I'm not sure if there's a way to avoid this.*
 
 ## Subclassing
 
-This module is starting to look like a C# `struct`. We still have two access modifiers to go: `protected` and `protected static`. Sub-classing is very easy to implement poorly and extremely hard to implement properly. I went through a few renditions as I discovered more nuances of subclassing that I had overlooked.
+We're about half way there in terms of implemented functionality. We have two access modifiers to go: `protected` and `protected static`. Sub-classing is very easy to implement poorly and extremely hard to implement properly. I went through a few renditions as I discovered more nuances of subclassing that I had overlooked.
 
 We will change `Machine` here to be more simplistic, and also introduce a new `class` called `Engine`.
 
@@ -294,12 +322,12 @@ const Machine = (function()
     const module = { };
     
     const privateMap = new WeakMap();
-    module.hasInstance = function(obj)  // 'hasInstance' because its similar to 'instanceof'
+    module.hasInstance = function(obj)      // 'hasInstance' because it is similar to 'instanceof'
     {
         return privateMap.has(obj);
     };
     
-    module.new = function()              // using 'new' instead of 'createMachine' is less verbose
+    module.new = function()                 // using 'new' instead of 'createMachine' is less verbose
     {
         const instance = { };
         const priv = { };
@@ -348,11 +376,11 @@ const Engine = (function()
 })();
 ```
 
-An `Engine` *is* a `Machine`, but currently we have no way to model that relationship. So what can we do?
+An `Engine` *is* a `Machine`, but currently we have no way to model that relationship.
 
 ##### Attempt #1
 
-The first idea that comes to mind is to have `Engine` call the constructor of `Machine`. But remember, we made our classes **concrete** with the addition of `Object.freeze()` inside `Machine`'s constructor.
+The first thought that comes to mind to implement sublclassing is to have `Engine` call the constructor of `Machine`. But remember, we made our objects **concrete** with the addition of `Object.freeze()` inside `Machine`'s constructor.
 
 ```javascript
 module.new = function(horsepower)
@@ -370,7 +398,7 @@ Removing `Object.freeze()` in our constructors would violate one of the tenants 
 
 ##### Attempt #2
 
-Using the `public` constructor won't work (shown above). We will need a way to construct the object *while still having the ability to add functionality*. In a sense, a `protected` constructor!
+Using the `public` constructor won't work (shown above). We will need a way to construct the object *while still having the ability to add functionality*. What if we have two constructors, a `public` one which locks the object and another one which leaves the objects mutable?
 
 ###### Machine.js
 ```javascript
@@ -379,7 +407,7 @@ const Machine = (function()
     const module = { };
     ...
     
-    const constructor = function()          // 'protected' constructor.
+    const constructor = function()          // Constructor to give to subclasses
     {
         const instance = { };
         ...
@@ -395,7 +423,7 @@ const Machine = (function()
         return Object.freeze(constructor());
     };
     
-    module.extend = function()              // hand-off 'protected' constructor
+    module.extend = function()              // hand-off constructor to subclass
     {
         return constructor;
     };
@@ -404,9 +432,9 @@ const Machine = (function()
 })();
 ```
 
-It's a bit ugly, but this is a step in the right direction. Now subclasses can call `extend` to have permission to construct and expand on `Machine` objects.
+It's a bit ugly but this is a step in the right direction. Now subclasses can call `extend` to have permission to construct and expand on `Machine` objects.
 
-*Note: Providing the constructor to subclasses like this causes another problem. Subclasses will be able to add `public` members, but they will also be able to **remove** members. This means that an subclass of `Machine` may not have a `start` method, which is an issue I have not come up with a solution for.*
+*Note: Passing a constructor which creates *mutable* objects means a subclass could violate the **concrete** members of the superclass. `Engine` could outright remove the `start` method for example. This is an issue that I'm not sure if there's an easy solution to. Either you allow a subclass to add AND remove functionality or you don't allow any mutations whatsoever.*
 
 ###### Engine.js
 ```javascript
@@ -434,20 +462,23 @@ const Engine = (function()
 })();
 ```
 
-Calling `Machine.hasInstance(...)` and `Engine.hasInstance(...)` will both result in `true`. Instances created by `Engine` are now in fact `Machine` objects. 
-However there is still no sense of `protected` members or `protected static` class members. This method is still too primitive.
+Calling `Machine.hasInstance(...)` and `Engine.hasInstance(...)` will both return `true` for objects returned by `Engine.new`. Instances created by `Engine` are now in fact `Machine` objects. 
+However there is still no sense of `protected` members or `protected static` class members. This implementation is still too primitive.
 
 ## Protected Static
 ##### (Subclassing cont.) (Attempt #3)
-At this point I felt like I was missing something obvious. I thought of the superclasses' constructor and `protected static` class members as unrelated topics.
+At the most fundamental level, what happens in high level languages when you create a new class which extends another class? What could take place behind the scenes? Surely it's not as simple as just passing a constructor to the subclass.
 
-Then it hit me, subclassing is essentially three simple things:
+After enough thought, I could really only think of three things that take place when subclassing:
 * Access to the `protected static` members of all superclasses
 * Access to the superclasses' constructor
-* Access to the `public` and `protected` members of objects
+* Access to the `protected` members of objects
 
-Those first two **are actually the same thing** in this context. This is because *constructors are static members*. So it's not like a superclass hands you their `public` members, `protected` members, and their constructor. The constructor IS a `public`/`protected` member.
-What this means is `extend` should not return the `protected` constructor of the super class. It should return the `protected static` class members which *INCLUDE* the constructor.
+How could the `extend()` function we are designing implement those three things in a nice manner?
+
+Well, if you think about it, the first and second points *are part of the same thing*. Constructors *are* `static` members of a class. So if you have a special constructor only for subclasses, that's just a `protected static` member.
+
+`Protected static` fields [are often considered to be an anti-pattern](https://stackoverflow.com/questions/24289070/why-we-should-not-use-protected-static-in-java), but they will be what `extend()` returns.
 
 ###### Machine.js
 ```javascript
@@ -455,7 +486,7 @@ const Machine = (function()
 {
     const module = { };
     const privMap = new WeakMap();
-    module.hasInstance = privMap.has;       // You can even perform this optimization to be less verbose.
+    module.hasInstance = privMap.has;       // Less verbose version.
     
     const protStatic = { };                 // protected static members of the class
     
@@ -476,10 +507,10 @@ const Machine = (function()
         return Object.freeze(protStatic.new());
     };
     
-    Object.freeze(protStatic);              // This class is now concrete. Subclasses cannot change it.
+    Object.freeze(protStatic);              // Only concrete classes can be extended.
     module.extend = function()
     {
-        return protStatic;                  // Provide subclasses with the protected static class member(s).
+        return protStatic;                  // Hand off protected static members to subclasses.
     };
     
     return Object.freeze(module);
@@ -491,20 +522,22 @@ const Machine = (function()
 const Engine = (function()
 {
     const module = { };
-    ...
+    const privMap = new WeakMap();
+    module.hasInstance = privMap.has;
     
-    const superStaticProt = Machine.extend();   // Gain access to the protected static member(s) of the super class.
+    const superProtStatic = Machine.extend();   // Protected static members of the superclass.
     
     module.new = function(horsepower)
     {
-        const instance = superStaticProt.new(); // Call super constructor of the Machine class.
+        const instance = superStaticProt.new(); // Call super constructor.
+        privMap.set(instance, { });
         
-        instance.getHorsepower = function()     // We can implement new functionality properly.
+        instance.getHorsepower = function()     // Instance is not frozen, can add functionality.
         {
             return horsepower;
         };
         
-        return Object.freeze(instance);         // Public constructors still must always freeze the object.
+        return Object.freeze(instance);
     };
     
     return Object.freeze(module);
@@ -558,7 +591,7 @@ You can simulate function overloading using many different strategies not covere
 
 An `abstract` class is one whose objects cannot be directly instantiated. We can simulate this behavior by removing the `public` constructor of the class. If you only provide a `protected` constructor for the class, it becomes effectively `abstract`.
 
-You may be wondering: *Surely it would make sense for `abstract` classes to be able to have public constructors?* In most languages, yes. However [it's generally considered an **anti-pattern**](https://stackoverflow.com/questions/4794305/are-there-good-reasons-for-a-public-constructor-of-an-abstract-class).
+You may be wondering: *But I thought abstract classes can have public constructors?* In most languages, yes. However [it's generally considered an **anti-pattern**](https://stackoverflow.com/questions/4794305/are-there-good-reasons-for-a-public-constructor-of-an-abstract-class).
 
 **Abstract Methods**
 
